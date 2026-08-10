@@ -1,0 +1,2 @@
+allowBuilds:
+  '@duckdb/node-bindings': true

@@ -1,0 +1,57 @@
+clone:
+  git:
+    image: woodpeckerci/plugin-git
+    settings:
+      partial: false
+      depth: 5
+
+steps:
+  init-secrets:
+    when:
+      - event: push
+    image: infisical/cli
+    environment:
+      INFISICAL_TOKEN:
+        from_secret: VAULT_TOKEN
+    commands:
+      - infisical export --domain https://vault.devforth.io/api --format=dotenv-export --env="prod" > /woodpecker/deploy.vault.env
+
+  build:
+    image: devforth/node20-pnpm:latest
+    when:
+      - event: push
+    commands:
+      - apt update && apt install -y rsync
+      - . /woodpecker/deploy.vault.env   
+      - pnpm install
+      - /bin/bash ./.woodpecker/buildRelease.sh
+      - npm audit signatures
+
+  release:
+    image: devforth/node20-pnpm:latest
+    when:
+      - event:
+          - push
+        branch:
+          - main
+    commands:
+      - . /woodpecker/deploy.vault.env
+      - pnpm exec semantic-release
+
+  slack-on-failure:
+    image: curlimages/curl
+    when:
+      - event: push
+        status: [failure]
+    commands:
+      - . /woodpecker/deploy.vault.env
+      - /bin/sh ./.woodpecker/buildSlackNotify.sh failure
+      
+  slack-on-success: 
+    image: curlimages/curl
+    when:
+      - event: push
+        status: [success]
+    commands:
+      - . /woodpecker/deploy.vault.env
+      - /bin/sh ./.woodpecker/buildSlackNotify.sh success

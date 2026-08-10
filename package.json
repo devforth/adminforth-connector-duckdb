@@ -1,0 +1,56 @@
+{
+  "name": "@adminforth/connector-duckdb",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "homepage": "https://adminforth.dev/docs/tutorial/Plugins/connector-duckdb/",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "DevForth (https://devforth.io)",
+  "license": "MIT",
+  "description": "DuckDB data source connector for AdminForth",
+  "devDependencies": {
+    "@types/node": "latest",
+    "adminforth": "^3.8.0",
+    "semantic-release": "^24.2.1",
+    "semantic-release-slack-bot": "^4.0.2",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@duckdb/node-api": "^1.5.5-r.1",
+    "dayjs": "^1.11.21"
+  },
+  "release": {
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/npm",
+      "@semantic-release/github",
+      [
+        "semantic-release-slack-bot",
+        {
+          "packageName": "@adminforth/connector-duckdb",
+          "notifyOnSuccess": true,
+          "notifyOnFail": true,
+          "slackIcon": ":package:",
+          "markdownReleaseNotes": true
+        }
+      ]
+    ]
+  },
+  "branches": [
+    "main",
+    {
+      "name": "next",
+      "prerelease": true
+    }
+  ],
+  "peerDependencies": {
+    "adminforth": "^3.8.0"
+  }
+}
