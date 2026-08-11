@@ -171,6 +171,14 @@ class DuckDBConnector extends AdminForthBaseConnector implements IAdminForthData
     return reader.getRowObjectsJson() as DuckDBRow[];
   }
 
+  private validateColumnNames(resource: AdminForthResource, columns: string[]): void {
+    const knownColumns = new Set(resource.dataSourceColumns.map((column) => column.name));
+    const unknownColumn = columns.find((column) => !knownColumns.has(column));
+    if (unknownColumn) {
+      throw new Error(`Invalid column name: ${unknownColumn}`);
+    }
+  }
+
   async getAllTables(): Promise<string[]> {
     const rows = await this.rows(`
       SELECT table_name
@@ -508,6 +516,7 @@ class DuckDBConnector extends AdminForthBaseConnector implements IAdminForthData
   }): Promise<string> {
     const primaryKey = this.getPrimaryKey(resource);
     const columnNames = Object.keys(record);
+    this.validateColumnNames(resource, columnNames);
     const values = columnNames.map((columnName) => normalizeBoundValue(record[columnName]));
     const insert = columnNames.length
       ? `(${columnNames.map(quoteIdentifier).join(', ')}) VALUES (${columnNames.map((_, index) => `$${index + 1}`).join(', ')})`
@@ -524,6 +533,7 @@ class DuckDBConnector extends AdminForthBaseConnector implements IAdminForthData
     newValues: Record<string, any>;
   }): Promise<void> {
     const columns = Object.keys(newValues);
+    this.validateColumnNames(resource, columns);
     const values = columns.map((column) => normalizeBoundValue(newValues[column]));
     values.push(normalizeBoundValue(recordId));
     const assignments = columns.map((column, index) => `${quoteIdentifier(column)} = $${index + 1}`).join(', ');
