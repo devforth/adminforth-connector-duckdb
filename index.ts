@@ -496,6 +496,12 @@ class DuckDBConnector extends AdminForthBaseConnector implements IAdminForthData
     columns: AdminForthResourceColumn[];
   }): Promise<{ [key: string]: { min: any; max: any } }> {
     const result: { [key: string]: { min: any; max: any } } = {};
+    if (!columns.length) {
+      // AdminForth passes every column that opted in via `allowMinMaxQuery`, which
+      // is none for most resources. Without this the SELECT below has no selection
+      // list and DuckDB rejects it with "SELECT clause without selection list".
+      return result;
+    }
     const select = columns.flatMap((column, index) => [
       `MIN(${quoteIdentifier(column.name)}) AS ${quoteIdentifier(`min_${index}`)}`,
       `MAX(${quoteIdentifier(column.name)}) AS ${quoteIdentifier(`max_${index}`)}`,
